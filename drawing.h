@@ -34,5 +34,4 @@ void waitForRetrace(void);
 void showBuffer(byte *buffer);
 void start_mode_vga();
 void exit_mode_vga();
-
 #endif

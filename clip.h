@@ -1,12 +1,17 @@
 #ifndef CLIP_H
 #define CLIP_H
 
+#include "drawing.h"
+
 typedef int OutCode;
 
 extern int xmin;
 extern int ymin;
 extern int xmax;
 extern int ymax;
+
+extern int CLIP_WIDTH;
+extern int CLIP_HEIGHT;
 
 extern const int INSIDE; /* 0000 */
 extern const int LEFT;   /* 0001 */
@@ -23,6 +28,12 @@ OutCode ComputeOutCode(int x, int y);
 	P0 = (x0, y0) to P1 = (x1, y1) against a rectangle with 
 	diagonal from (xmin, ymin) to (xmax, ymax).
 */
-void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1);
+void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1, byte color);
 
+void setClipBounds(int x0, int y0, int x1, int y1);
+void resizeClipBounds(int new_width, int new_height);
+void drawClipBounds(byte color);
+
+void setPixel2(int x, int y, byte color);
+void fillRect2(int left,int top, int right, int bottom, byte color);
 #endif

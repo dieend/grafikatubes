@@ -48,7 +48,7 @@ void getMouseMotion(sword *dx, sword *dy)
 	*dy = out.x.dx;
 }
 
-void drawMouse(MOUSE *mouse, byte color)
+void showMouse(MOUSE *mouse, byte color)
 {
 	int mx = mouse->x;
 	int my = mouse->y;
