@@ -6,6 +6,9 @@
 #define CLIP_STATIC 0
 #define CLIP_FOLLOW 1
 
+#define CLIP_COLOR_NORMAL 8
+#define CLIP_COLOR_FOCUS 4
+
 #define CLIP_WIDTH 50
 #define CLIP_HEIGHT 50
 
@@ -35,6 +38,8 @@ int main() {
 	
 	/* Init VGA mode first */
 	start_mode_vga();
+	clearBuffer(double_buffer);
+	showBuffer(double_buffer);
 	
 	/* Init mouse */
 	if (!initMouse(&mouse))
@@ -43,21 +48,20 @@ int main() {
 		exit(1);
 	}
 	
-	clearBuffer(double_buffer);
-	showBuffer(double_buffer);
+	/* Get mouse position */
+	new_x = mouse.x;
+	new_y = mouse.y;
+	/* Show mouse */
+	mouseColor = 15;
+	showMouse(&mouse, mouseColor);
+	last_time = *my_clock;
 	
-	clipMode = CLIP_FOLLOW;
+	clipMode = CLIP_STATIC;
 	clip_x0 = 50; clip_y0 = 50;
 	clip_x1 = clip_x0 + CLIP_WIDTH;
 	clip_y1 = clip_y0 + CLIP_HEIGHT;
 	
-	new_x = mouse.x;
-	new_y = mouse.y;
-	redraw = 0xFFFF;
-	mouseColor = 15;
-	showMouse(&mouse, mouseColor);
-	last_time = *my_clock;
-
+	redraw = 1;
 	done = 0;
 	
 	/* Main loop */
@@ -67,8 +71,6 @@ int main() {
 			/* Clear the buffer first */
 			clearBuffer(double_buffer);
 			waitForRetrace();
-			/* Hide mouse */
-			hideMouse(&mouse);
 			
 			/*** Define what to draw here ***/
 			if (clipMode == CLIP_FOLLOW) {
@@ -82,17 +84,18 @@ int main() {
 				xmax = clip_x1;
 				ymax = clip_y1;
 			}
-			setRect(xmin, ymin, xmax, ymax, 8);
+			setRect(xmin, ymin, xmax, ymax, (clipMode == CLIP_STATIC ? CLIP_COLOR_NORMAL : CLIP_COLOR_FOCUS));
 			
 			/* Draw a line */
 			CohenSutherlandLineClipAndDraw(-8,24,145,244);
 			
 			/*** End of draw function ***/
 			
-			/* Redraw and show mouse */
+			/* Set mouse position */
 			mouse.x = new_x;
 			mouse.y = new_y;
-			showMouse(&mouse, mouseColor);
+			/* Draw only if CLIP_STATIC */
+			if (clipMode == CLIP_STATIC) showMouse(&mouse, mouseColor);
 			last_time = *my_clock;
 			redraw = 0;
 		}
@@ -113,19 +116,7 @@ int main() {
 		{
 			new_x = mouse.x + dx;
 			new_y = mouse.y + dy;
-			/*
-			if (clipMode == CLIP_FOLLOW) {
-				if (new_x < CLIP_WIDTH / 2) new_x = CLIP_WIDTH / 2;
-				if (new_y < CLIP_HEIGHT / 2) new_y = CLIP_HEIGHT / 2;
-				if (new_x > SCREEN_WIDTH - CLIP_WIDTH / 2 - 1) new_x = SCREEN_WIDTH - CLIP_WIDTH / 2 - 1;
-				if (new_y > SCREEN_HEIGHT - CLIP_HEIGHT / 2 - 1) new_y = SCREEN_HEIGHT - CLIP_HEIGHT / 2 - 1;
-			} else {
-				if (new_x < 0) new_x = 0;
-				if (new_y < 0) new_y = 0;
-				if (new_x > SCREEN_WIDTH - MOUSE_WIDTH) new_x = SCREEN_WIDTH - MOUSE_WIDTH;
-				if (new_y > SCREEN_HEIGHT - MOUSE_HEIGHT) new_y = SCREEN_HEIGHT - MOUSE_HEIGHT;
-			}
-			*/
+			
 			recheck_new_mouse_pos(clipMode, &new_x, &new_y);
 			redraw = 1;
 		}
