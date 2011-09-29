@@ -18,7 +18,7 @@ void dtor_point(point* p);
 
 void rotate_point(point* p, double radian);
 void translate_point(point* p, int x, int y);
-void scale_point(point* p, int x, int y);
+void scale_point(point* p, int x, int y, int ox, int oy);
 void draw_point(point* p);
 void print_point(point* p);
 #endif

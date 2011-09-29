@@ -2,6 +2,7 @@
 #include "clip.h"
 #include "drawing.h"
 #include "mouse.h"
+#include "font.h"
 
 #define CLIP_STATIC 0
 #define CLIP_FOLLOW 1
@@ -21,6 +22,10 @@
 #define PICKER_SIZE			(PICKER_BOX_SIZE*PICKER_GRID_SIZE)
 #define MARGIN				16
 
+/* Zoomed clipping region variables */
+int zx0, zy0, zx1, zy1;
+
+void checkDrawFontClip(FONT *E);
 void recheck_new_mouse_pos(int clipMode, sword *new_x, sword *new_y);
 
 int main() {
@@ -34,6 +39,20 @@ int main() {
 	word press, release;
 	sword new_x, new_y, dx, dy;
 	byte mouseColor;
+	
+	/* Font variables */
+	FONT *E, *F, *G, *H;
+	
+	zx0 = 180; zy0 = 20;
+	
+	/* Init font database */
+	init_font_db("data.txt");
+	
+	/* Init fonts */
+	E = set_font('E', 20, 60);
+	F = set_font('F', 40, 60);
+	G = set_font('G', 20, 120);
+	H = set_font('H', 40, 120);
 	
 	/* Init VGA mode first */
 	start_mode_vga();
@@ -65,7 +84,7 @@ int main() {
 	while (!done) {
 		/* Draw function */
 		if (redraw) {
-			int x, y, x2, y2, i, j;
+			int x1, y1, x2, y2, i, j;
 			byte color;
 			/* Clear the buffer first */
 			clearBuffer(double_buffer);
@@ -73,23 +92,42 @@ int main() {
 			
 			/*** Define what to draw here ***/
 			
-			/* Draw colors grid */
-			for (i = 0; i < PICKER_GRID_SIZE; i++) {
-				for (j = 0; j < PICKER_GRID_SIZE; j++) {
-					color = i + j * PICKER_GRID_SIZE;
-					x = MARGIN + 1 + i * PICKER_BOX_SIZE;
-					y = MARGIN + 1 + j * PICKER_BOX_SIZE;
-					x2 = x + PICKER_BOX_SIZE - 1;
-					y2 = y + PICKER_BOX_SIZE - 1;
-					fillRect2(x, y, x2, y2, color);
-				}
-			}
+			/* Draw text */
+			draw_font(E);
+			draw_font(F);
+			draw_font(G);
+			draw_font(H);
 			
-			/* Draw CLIP rectangle bound */
+			/* Draw CLIP cursor rectangle bound */
 			drawClipBounds(clipMode == CLIP_STATIC ? CLIP_COLOR_NORMAL : CLIP_COLOR_FOCUS);
 			
 			/* Draw a line */
-			CohenSutherlandLineClipAndDraw(-8,24,145,244,6);
+			/*CohenSutherlandLineClipAndDraw(-8,24,145,244,6);*/
+			drawLineClip(-8,24,145,244,6);
+			
+			/* Draw zoomer rectangle bound */
+			zx1 = zx0 + abs(xmax - xmin) * 3;
+			zy1 = zy0 + abs(ymax - ymin) * 3;
+			setRect(zx0, zy0, zx1, zy1, 4);
+			setPixel(2, 60, 4);
+			
+			/* Draw clipped fonts */
+			/* Font E */
+			checkDrawFontClip(E);
+			checkDrawFontClip(F);
+			checkDrawFontClip(G);
+			checkDrawFontClip(H);
+			/* Draw inside zoomer from cursor clipping region */
+			/* Just translate and scale it */
+			/*
+			x1 = xmin; x2 = xmax;
+			y1 = ymin; y2 = ymax;
+			for (i = y1; i < y2; i++) {
+				for (j = x1; j < x2; j++) {
+					byte pixel = getPixel(j, i);
+					setPixel(zx0 + (j - xmin) * 3, zy0 + (i - ymin) * 3, pixel);
+				}
+			}/*
 			
 			/*** End of draw function ***/
 			
@@ -156,6 +194,12 @@ int main() {
 		showBuffer(double_buffer);
 	}
 	
+	/* Delete fonts */
+	dtor_font(E);
+	dtor_font(F);
+	dtor_font(G);
+	dtor_font(H);
+	
 	/* Clear buffer and exit VGA mode */
 	clearBuffer(double_buffer);
 	showBuffer(double_buffer);
@@ -179,5 +223,15 @@ void recheck_new_mouse_pos(int clipMode, sword *new_x, sword *new_y) {
 		if (*new_y < 0) *new_y = 0;
 		if (*new_x > SCREEN_WIDTH - MOUSE_WIDTH) *new_x = SCREEN_WIDTH - MOUSE_WIDTH;
 		if (*new_y > SCREEN_HEIGHT - MOUSE_HEIGHT) *new_y = SCREEN_HEIGHT - MOUSE_HEIGHT;
+	}
+}
+
+void checkDrawFontClip(FONT *E) {
+	if (checkFontClip(E)) {
+		FONT *t;
+		t = set_font(E->type, zx0 + (E->x - xmin) * 3, zy1 + (E->y - ymax) * 3);
+		scale_font(t, 3, 3);
+		drawFontClip(t,zx0, zy0, zx1, zy1);
+		dtor_font(t);
 	}
 }

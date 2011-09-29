@@ -2,6 +2,8 @@
 #define CLIP_H
 
 #include "drawing.h"
+#include "font.h"
+#include "boolean.h"
 
 typedef int OutCode;
 
@@ -30,10 +32,17 @@ OutCode ComputeOutCode(int x, int y);
 */
 void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1, byte color);
 
+boolean checkLineClip(int *x0, int *y0, int *x1, int *y1);
+void drawLineClip(int x0, int y0, int x1, int y1, byte color);
+
 void setClipBounds(int x0, int y0, int x1, int y1);
 void resizeClipBounds(int new_width, int new_height);
 void drawClipBounds(byte color);
 
 void setPixel2(int x, int y, byte color);
 void fillRect2(int left,int top, int right, int bottom, byte color);
+
+boolean checkFontClip(FONT* font);
+void drawFontClip(FONT* font, int zx0, int zy0, int zx1, int zy1);
+
 #endif

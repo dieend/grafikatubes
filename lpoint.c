@@ -80,10 +80,10 @@ void translate_polygon(polygon* p, int x, int y){
         it = it->next_element;
     }
 }
-void scale_polygon(polygon* p, int x, int y){
+void scale_polygon(polygon* p, int x, int y, int ox, int oy){
     address it = p->first;
     while (it!= NULL){
-        scale_point(it->p, x, y);
+        scale_point(it->p, x, y, ox, oy);
         it = it->next_element;
     }
 }

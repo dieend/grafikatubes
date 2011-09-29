@@ -41,11 +41,15 @@ void setMode(byte mode){
 }
 
 void setPixel(int x, int y, byte color){
-	double_buffer[(y << 8) + (y << 6) + x] = color;
+	if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
+		double_buffer[(y << 8) + (y << 6) + x] = color;
 }
 
 byte getPixel(int x, int y){
-	return double_buffer[(y << 8) + (y << 6) + x];
+	if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
+		return double_buffer[(y << 8) + (y << 6) + x];
+	else
+		return 0;
 }
 
 void setLine(int x1, int y1, int x2, int y2, byte color){
