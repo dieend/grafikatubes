@@ -4,8 +4,8 @@
 
 int xmin = 25;
 int ymin = 25;
-int xmax = 150;
-int ymax = 100;
+int xmax = 50;
+int ymax = 50;
 
 int CLIP_WIDTH = 50;
 int CLIP_HEIGHT = 50;
@@ -96,6 +96,64 @@ void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1, byte color)
 	}
 }
 
+boolean checkLineClip(int *x0, int *y0, int *x1, int *y1) {
+	/* compute outcodes for P0, P1, and whatever point lies outside the clip rectangle */
+	OutCode outcode0 = ComputeOutCode(*x0, *y0);
+	OutCode outcode1 = ComputeOutCode(*x1, *y1);
+	boolean accept = false;
+
+	while (true) {
+		if (!(outcode0 | outcode1)) {	/* Bitwise OR is 0. Trivially accept and get out of loop */
+			accept = true;
+			break;
+		} else if (outcode0 & outcode1) {	/* Bitwise AND is not 0. Trivially reject and get out of loop */
+			break;
+		} else {
+			/*	failed both tests, so calculate the line segment to clip
+				from an outside point to an intersection with clip edge */
+			int x, y;
+
+			/*	At least one endpoint is outside the clip rectangle; pick it. */
+			OutCode outcodeOut = outcode0? outcode0 : outcode1;
+
+			/*	Now find the intersection point;
+				use formulas y = *y0 + slope * (x - *x0), x = *x0 + (1 / slope) * (y - *y0) */
+			if (outcodeOut & TOP) {				/* point is above the clip rectangle */
+				x = *x0 + (*x1 - *x0) * (ymax - *y0) / (*y1 - *y0);
+				y = ymax;
+			} else if (outcodeOut & BOTTOM) {	/* point is below the clip rectangle */
+				x = *x0 + (*x1 - *x0) * (ymin - *y0) / (*y1 - *y0);
+				y = ymin;
+			} else if (outcodeOut & RIGHT) {	/* point is to the right of clip rectangle */
+				y = *y0 + (*y1 - *y0) * (xmax - *x0) / (*x1 - *x0);
+				x = xmax;
+			} else if (outcodeOut & LEFT) {		/* point is to the left of clip rectangle */
+				y = *y0 + (*y1 - *y0) * (xmin - *x0) / (*x1 - *x0);
+				x = xmin;
+			}
+			/*	Now we move outside point to intersection point to clip
+				and get ready for next pass. */
+			if (outcodeOut == outcode0) {
+				*x0 = x;
+				*y0 = y;
+				outcode0 = ComputeOutCode(*x0, *y0);
+			} else {
+				*x1 = x;
+				*y1 = y;
+				outcode1 = ComputeOutCode(*x1, *y1);
+			}
+		}
+	}
+	return accept;
+}
+
+void drawLineClip(int x0, int y0, int x1, int y1, byte color) {
+	if (checkLineClip(&x0, &y0, &x1, &y1)) {
+		/* Following functions are left for implementation by user based on his platform(OpenGL/graphics.h etc.) */
+		setLine(x0, y0, x1, y1, color);
+	}
+}
+
 void setClipBounds(int x0, int y0, int x1, int y1) {
 	xmin = x0;
 	ymin = y0;
@@ -156,4 +214,45 @@ void fillRect2(int left,int top, int right, int bottom, byte color){
 	for (y = top; y < bottom; y++) {
 		CohenSutherlandLineClipAndDraw(left, y, right, y, color);
 	}
+}
+
+boolean checkFontClip(FONT* font) {
+	int x0, y0, x1, y1;
+	boolean is = false;
+	element_polygon* it = font->points->first, *prev = NULL;
+    while (it != NULL) {
+        if (it->p->status == POINT_STATUS_PENDOWN) {
+			x0 = font->x + prev->p->x;
+			y0 = font->y + prev->p->y-15;
+			x1 = font->x + it->p->x;
+			y1 = font->y + it->p->y-15;
+            is |= checkLineClip(&x0, &y0, &x1, &y1);
+        } else if (it->p->status == POINT_STATUS_PENUP) {
+        }
+        prev = it;
+        it = it->next_element;
+    }
+	return is;
+}
+
+void drawFontClip(FONT* font, int zx0, int zy0, int zx1, int zy1) {
+	int x0, y0, x1, y1, txmin, txmax, tymin, tymax;
+    element_polygon* it, *prev;
+	txmin = xmin; txmax = xmax; tymin = ymin; tymax = ymax;
+	xmin = zx0; xmax = zx1; ymin = zy0; ymax = zy1;
+	it = font->points->first;
+	prev = NULL;
+    while (it != NULL) {
+        if (it->p->status == POINT_STATUS_PENDOWN) {
+			x0 = font->x + prev->p->x;
+			y0 = font->y + prev->p->y-15;
+			x1 = font->x + it->p->x;
+			y1 = font->y + it->p->y-15;
+            drawLineClip(x0, y0, x1, y1, 15);
+        } else if (it->p->status == POINT_STATUS_PENUP) {
+        }
+        prev = it;
+        it = it->next_element;
+    }
+	xmin = txmin; xmax = txmax; ymin = tymin; ymax = tymax;
 }

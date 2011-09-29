@@ -21,5 +21,5 @@ void draw_polygon(polygon* L);
 void copy_polygon(polygon* dest, polygon* src);
 void rotate_polygon(polygon* p, double radian);
 void translate_polygon(polygon* p, int x, int y);
-void scale_polygon(polygon* p, int x, int y);
+void scale_polygon(polygon* p, int x, int y, int ox, int oy);
 #endif

@@ -35,13 +35,13 @@ void translate_font(FONT* font, int x, int y){
     translate_polygon(font->points, x, y);
 }
 void scale_font(FONT* font, int x, int y){
-    scale_polygon(font->points, x, y);
+    scale_polygon(font->points, x, y, 0, 14);
 }
 void draw_font(FONT* font){
     element_polygon* it = font->points->first, *prev = NULL;
     while (it != NULL) {
         if (it->p->status == POINT_STATUS_PENDOWN) {
-            setLine(font->x+prev->p->x, font->y+prev->p->y,font->x+it->p->x, font->y+it->p->y, 15);
+            setLine(font->x+prev->p->x, font->y+prev->p->y-15,font->x+it->p->x, font->y+it->p->y-15, 15);
         } else if (it->p->status == POINT_STATUS_PENUP) {
         }
         prev = it;

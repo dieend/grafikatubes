@@ -26,9 +26,9 @@ void translate_point(point* p,int x, int y){
     p->x += x;
     p->y += y;
 }
-void scale_point(point* p, int x, int y){
-    p->x *= x;
-    p->y *= y;
+void scale_point(point* p, int x, int y, int ox, int oy){
+    p->x = (p->x - ox) * x + ox;
+    p->y = (p->y - oy) * y + oy;
 }
 void draw_point(point* p){
     /* buat warnanya */
