@@ -11,12 +11,14 @@ void start_mode_vga(){
 	}
 	setMode(MODE_VGA);
 }
+
 void exit_mode_vga(){
-	memset(double_buffer, 0, SCREEN_WIDTH * SCREEN_HEIGHT);
+	clearBuffer(double_buffer);
 	showBuffer(double_buffer);
 	free(double_buffer);
 	setMode(MODE_TEXT);
 }
+
 void clearBuffer(byte* buffer){
 	memset(buffer, 0, SCREEN_WIDTH * SCREEN_HEIGHT);
 }
@@ -37,12 +39,15 @@ void setMode(byte mode){
 	regs.h.al = mode;
 	int86(INT_VIDEO,&regs,&regs);
 }
+
 void setPixel(int x, int y, byte color){
 	double_buffer[(y << 8) + (y << 6) + x] = color;
 }
+
 byte getPixel(int x, int y){
 	return double_buffer[(y << 8) + (y << 6) + x];
 }
+
 void setLine(int x1, int y1, int x2, int y2, byte color){
 	int i,dx,dy,sdx,sdy,dxabs,dyabs,x,y,px,py;
 
@@ -88,6 +93,7 @@ void setLine(int x1, int y1, int x2, int y2, byte color){
 		}
 	}
 }
+
 void setRect(int left,int top, int right, int bottom, byte color){
 	word top_offset,bottom_offset,i,temp;
 
@@ -115,6 +121,7 @@ void setRect(int left,int top, int right, int bottom, byte color){
 		setPixel(right, i, color);
 	}
 }
+
 void fillRect(int left,int top, int right, int bottom, byte color){
 	word top_offset,bottom_offset,i,temp,width;
 
@@ -140,6 +147,7 @@ void fillRect(int left,int top, int right, int bottom, byte color){
 		memset(&double_buffer[i],color,width);
 	}
 }
+
 void waitForRetrace(void)
 {
     /* wait until done with vertical retrace */

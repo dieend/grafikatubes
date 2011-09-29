@@ -36,6 +36,6 @@ sword 	initMouse(MOUSE *mouse);
 sword 	getMousePress(sword button);
 sword 	getMouseRelease(sword button);
 void 	getMouseMotion(sword *dx, sword *dy);
-void 	drawMouse(MOUSE *mouse, byte color);
+void 	showMouse(MOUSE *mouse, byte color);
 
 #endif

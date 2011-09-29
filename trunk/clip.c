@@ -5,7 +5,10 @@
 int xmin = 25;
 int ymin = 25;
 int xmax = 150;
-int ymax = 150;
+int ymax = 100;
+
+int CLIP_WIDTH = 50;
+int CLIP_HEIGHT = 50;
 
 const int INSIDE	= 0;	/* 0000 */
 const int LEFT		= 1;	/* 0001 */
@@ -38,7 +41,7 @@ OutCode ComputeOutCode(int x, int y)
 	P0 = (x0, y0) to P1 = (x1, y1) against a rectangle with 
 	diagonal from (xmin, ymin) to (xmax, ymax).
 */
-void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1)
+void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1, byte color)
 {
 	/* compute outcodes for P0, P1, and whatever point lies outside the clip rectangle */
 	OutCode outcode0 = ComputeOutCode(x0, y0);
@@ -89,6 +92,68 @@ void CohenSutherlandLineClipAndDraw(int x0, int y0, int x1, int y1)
 	}
 	if (accept) {
 		/* Following functions are left for implementation by user based on his platform(OpenGL/graphics.h etc.) */
-		setLine(x0, y0, x1, y1, 6);
+		setLine(x0, y0, x1, y1, color);
+	}
+}
+
+void setClipBounds(int x0, int y0, int x1, int y1) {
+	xmin = x0;
+	ymin = y0;
+	xmax = x1;
+	ymax = y1;
+	CLIP_WIDTH = xmax - xmin + 1;
+	CLIP_HEIGHT = ymax - ymin + 1;
+}
+
+void resizeClipBounds(int new_width, int new_height) {
+	if (new_width > 0 && new_width < SCREEN_WIDTH && new_height > 0 && new_height < SCREEN_HEIGHT) {
+		int centerX, centerY, newxmin, newxmax, newymin, newymax;
+		
+		centerX = (xmin + xmax) / 2;
+		centerY = (ymin + ymax) / 2;
+		
+		newxmin = centerX - (new_width) / 2;
+		newxmax = centerX + (new_width) / 2;
+		newymin = centerY - (new_height) / 2;
+		newymax = centerY + (new_height) / 2;
+		
+		if (newxmin > 0 && newxmax < SCREEN_WIDTH && newymin > 0 && newymax < SCREEN_HEIGHT) {
+			CLIP_WIDTH = new_width;
+			CLIP_HEIGHT = new_height;
+			xmin = newxmin;
+			xmax = newxmax;
+			ymin = newymin;
+			ymax = newymax;
+		}
+	}
+}
+
+void drawClipBounds(byte color) {
+	setRect(xmin, ymin, xmax, ymax, color);
+}
+
+void setPixel2(int x, int y, byte color) {
+	if (x > xmin && x < xmax && y > ymin && y < ymax)
+		double_buffer[(y << 8) + (y << 6) + x] = color;
+}
+
+void fillRect2(int left,int top, int right, int bottom, byte color){
+	word x,y,i,temp,width;
+
+	if (top>bottom)
+	{
+		temp=top;
+		top=bottom;
+		bottom=temp;
+	}
+	if (left>right)
+	{
+		temp=left;
+		left=right;
+		right=temp;
+	}
+	
+	for (y = top; y < bottom; y++) {
+		CohenSutherlandLineClipAndDraw(left, y, right, y, color);
 	}
 }
